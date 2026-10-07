@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriks Laporan Lalu Lintas Media Pembawa - September 2026</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        navy: {
+                            800: '#0f172a',
+                            900: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar for matrix table */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .matrix-cell-active {
+            transition: all 0.2s ease;
+        }
+        .matrix-cell-active:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased bg-slate-50">
+
+    <!-- Header Navbar -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-brand-600 rounded-xl text-white shadow-lg shadow-brand-600/30">
+                        <i data-lucide="ship" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Matriks Lalu Lintas Media Pembawa</h1>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                                September 2026
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Sistem Monitoring & Analisis Lalu Lintas Komoditas Perikanan & Karantina</p>
+                    </div>
+                </div>
+
+                <!-- Global Action Controls -->
+                <div class="flex items-center gap-2.5">
+                    <button onclick="exportToCSV()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium rounded-lg border border-slate-700 transition">
+                        <i data-lucide="download" class="w-4 h-4 text-brand-400"></i>
+                        <span>Ekspor CSV</span>
+                    </button>
+                    <button onclick="window.print()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-medium rounded-lg shadow-sm transition">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Cetak Laporan</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Metrics / KPI Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Total Frekuensi -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-brand-500/40 transition">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Total Frekuensi</p>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5" id="kpi-frekuensi">0</p>
+                    <p class="text-[11px] text-slate-400">kali transaksi</p>
+                </div>
+            </div>
+
+            <!-- Total Berat (KG) -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-brand-500/40 transition">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i data-lucide="scale" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Total Berat (KG)</p>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5" id="kpi-kg">0</p>
+                    <p class="text-[11px] text-slate-400">kilogram komoditas</p>
+                </div>
+            </div>
+
+            <!-- Total Ekor / Pcs -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-brand-500/40 transition">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="fish" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Total Benih/Ekor</p>
+                    <p class="text-xl font-bold text-slate-900 mt-0.5" id="kpi-ekor">0</p>
+                    <p class="text-[11px] text-slate-400">ekor / eksemplar</p>
+                </div>
+            </div>
+
+            <!-- Total Nilai Komoditi -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-brand-500/40 transition">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i data-lucide="banknote" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Total Nilai Komoditi</p>
+                    <p class="text-xl font-bold text-indigo-900 mt-0.5" id="kpi-nilai">Rp 0</p>
+                    <p class="text-[11px] text-slate-400">estimasi pasar</p>
+                </div>
+            </div>
+
+            <!-- Total Jenis & Daerah -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-brand-500/40 transition">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                    <i data-lucide="map-pin" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Komoditi & Asal</p>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span class="text-xl font-bold text-slate-900" id="kpi-komoditi">0</span>
+                        <span class="text-xs text-slate-500">Jenis /</span>
+                        <span class="text-lg font-bold text-purple-600" id="kpi-daerah">0</span>
+                        <span class="text-xs text-slate-500">Kota</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">sebaran wilayah asal</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Analytics Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart 1: Top Frekuensi Komoditi -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-600"></i>
+                            Top 10 Komoditas Berdasarkan Frekuensi Terbanyak
+                        </h2>
+                        <p class="text-xs text-slate-500">Grafik perbandingan frekuensi pengiriman komoditas tertinggi pada periode ini</p>
+                    </div>
+                </div>
+                <div class="h-64 sm:h-72 w-full relative">
+                    <canvas id="chartTopValue"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Distibusi Kategori Komoditas -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-brand-600"></i>
+                        Distribusi Kategori
+                    </h2>
+                    <p class="text-xs text-slate-500">Proporsi jenis media pembawa</p>
+                </div>
+                <div class="h-60 sm:h-64 w-full relative my-auto">
+                    <canvas id="chartCategory"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Matrix Distribution Heatmap / Cross-Tabulation View -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                <div>
+                    <h2 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-brand-600"></i>
+                        Matriks Sebaran Daerah Asal vs Komoditas Utama
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Pemetaan komoditas berdasarkan kota/kabupaten pengirim terbanyak</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                        <span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-300"></span> Rendah
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                        <span class="w-3 h-3 rounded bg-emerald-500"></span> Tinggi
+                    </span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar p-4">
+                <table class="w-full text-xs text-left border-collapse min-w-[700px]">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                            <th class="p-3 rounded-tl-lg sticky left-0 bg-slate-100 z-10 w-48 shadow-sm">Daerah Asal Utama</th>
+                            <th class="p-3 text-center">Ikan Nila</th>
+                            <th class="p-3 text-center">Udang Vaname</th>
+                            <th class="p-3 text-center">Ikan Kuwe</th>
+                            <th class="p-3 text-center">Ikan Tuna</th>
+                            <th class="p-3 text-center">Ikan Koi</th>
+                            <th class="p-3 text-center">Ikan Teri</th>
+                            <th class="p-3 text-center">Udang Jerbung</th>
+                            <th class="p-3 text-center">Lainnya</th>
+                            <th class="p-3 text-center font-bold bg-slate-200 rounded-tr-lg">Total Frek</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixTableBody" class="divide-y divide-slate-100 text-slate-600">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Main Data Table Section -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Filter Controls Bar -->
+            <div class="p-5 border-b border-slate-200 space-y-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i data-lucide="table" class="w-5 h-5 text-brand-600"></i>
+                            Daftar Lengkap Lalu Lintas Media Pembawa
+                        </h2>
+                        <p class="text-xs text-slate-500">Tabel rinci seluruh frekuensi, volume, dan nilai komoditi</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Search Box -->
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="searchInput" oninput="filterData()" placeholder="Cari nama komoditas/daerah..." 
+                                class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                        </div>
+
+                        <!-- Category Filter Dropdown -->
+                        <select id="categoryFilter" onchange="filterData()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            <option value="ALL">Semua Kategori</option>
+                            <option value="IKAN_KONSUMSI">Ikan Konsumsi</option>
+                            <option value="IKAN_HIAS">Ikan Hias</option>
+                            <option value="UDANG_KEPITING">Udang, Kepiting & Lobster</option>
+                            <option value="BENIH">Benih & Induk</option>
+                            <option value="OLAHAN_LAIN">Olahan & Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Elements -->
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100/80 border-b border-slate-200">
+                        <tr>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800">No</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 cursor-pointer hover:bg-slate-200/60 transition" onclick="sortTable('name')">
+                                <div class="flex items-center gap-1">
+                                    Media Pembawa
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 text-center cursor-pointer hover:bg-slate-200/60 transition" onclick="sortTable('frekuensi')">
+                                <div class="flex items-center justify-center gap-1">
+                                    Frekuensi
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 text-right cursor-pointer hover:bg-slate-200/60 transition" onclick="sortTable('kg')">
+                                <div class="flex items-center justify-end gap-1">
+                                    Berat (KG)
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 text-right cursor-pointer hover:bg-slate-200/60 transition" onclick="sortTable('ekor')">
+                                <div class="flex items-center justify-end gap-1">
+                                    Jumlah (EKOR)
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 text-right cursor-pointer hover:bg-slate-200/60 transition" onclick="sortTable('nilai')">
+                                <div class="flex items-center justify-end gap-1">
+                                    Nilai Komoditi (Rp)
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800">Daerah Asal</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-800 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-100">
+                        <!-- Populated dynamically via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Pagination/Info -->
+            <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                <p id="tableInfo">Menampilkan 0 dari 0 data komoditas</p>
+                <div class="flex items-center gap-2">
+                    <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-slate-700 transition">
+                        Sebelumnya
+                    </button>
+                    <span id="pageIndicator" class="font-medium text-slate-700 px-2">Halaman 1</span>
+                    <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-slate-700 transition">
+                        Berikutnya
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                        <i data-lucide="package-search" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900" id="modalTitle">Detail Komoditas</h3>
+                        <p class="text-xs text-slate-500" id="modalCategory">Kategori</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="text-slate-400 block mb-1">Frekuensi Transaksi</span>
+                    <span class="text-base font-bold text-slate-800" id="modalFrek">-</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="text-slate-400 block mb-1">Nilai Total (Rp)</span>
+                    <span class="text-base font-bold text-brand-600" id="modalNilai">-</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="text-slate-400 block mb-1">Berat Total (KG)</span>
+                    <span class="text-base font-bold text-slate-800" id="modalKg">-</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="text-slate-400 block mb-1">Jumlah Ekor/Benih</span>
+                    <span class="text-base font-bold text-slate-800" id="modalEkor">-</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-600"></i>
+                    Sebaran Daerah Asal Pengirim
+                </h4>
+                <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-2 bg-slate-50 rounded-xl border border-slate-100" id="modalOrigins">
+                    <!-- Badges injected here -->
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="closeModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium text-xs transition">
+                    Tutup Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Raw Dataset based on user prompt
+        const rawDataset = [
+            { name: "Ikan Nila", frekuensi: 59, kg: 104915, ekor: null, nilai: 1087230000, origins: ["KOTA MANADO", "KABUPATEN MINAHASA UTARA", "KABUPATEN PATI", "KABUPATEN BEKASI", "KABUPATEN LAMONGAN", "KOTA SURABAYA", "KABUPATEN PASURUAN"], cat: "IKAN_KONSUMSI" },
+            { name: "Udang Banana", frekuensi: 3, kg: 20330, ekor: null, nilai: 918450000, origins: ["KOTA PASURUAN", "KOTA SORONG"], cat: "UDANG_KEPITING" },
+            { name: "Udang Vaname", frekuensi: 32, kg: 32300, ekor: null, nilai: 1876000000, origins: ["KOTA MANADO", "KOTA BITUNG", "KABUPATEN MINAHASA", "KABUPATEN BOLAANG MONGONDOW", "KABUPATEN BEKASI", "KABUPATEN MALUKU TENGAH", "KABUPATEN BONE BOLANGO", "KABUPATEN GORONTALO"], cat: "UDANG_KEPITING" },
+            { name: "Kepiting Bakau", frekuensi: 4, kg: 196, ekor: null, nilai: 5350000, origins: ["KOTA MANADO", "KABUPATEN PULAU MOROTAI", "KOTA SORONG"], cat: "UDANG_KEPITING" },
+            { name: "Cairan Tubuh Kepiting", frekuensi: 1, kg: 5, ekor: null, nilai: 250000, origins: ["KOTA MANADO"], cat: "OLAHAN_LAIN" },
+            { name: "Ikan Cupang", frekuensi: 13, kg: null, ekor: 1875, nilai: 1345000, origins: ["KABUPATEN SIDOARJO", "KABUPATEN TULUNGAGUNG", "KOTA KEDIRI", "KABUPATEN KEDIRI"], cat: "IKAN_HIAS" },
+            { name: "Ikan mas koki", frekuensi: 10, kg: null, ekor: 1970, nilai: 1070000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Ikan Koi", frekuensi: 14, kg: null, ekor: 2426, nilai: 5040000, origins: ["KABUPATEN SIDOARJO", "KABUPATEN BLITAR", "KABUPATEN TULUNGAGUNG", "KABUPATEN KEDIRI", "KOTA SURABAYA"], cat: "IKAN_HIAS" },
+            { name: "Komet", frekuensi: 6, kg: null, ekor: 850, nilai: 450000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Ikan batu/Stonefish", frekuensi: 13, kg: null, ekor: 2865, nilai: 1570000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Ikan Molly", frekuensi: 12, kg: null, ekor: 1416, nilai: 695000, origins: ["KABUPATEN SIDOARJO", "KABUPATEN TULUNGAGUNG"], cat: "IKAN_HIAS" },
+            { name: "Ikan Tuna", frekuensi: 27, kg: 3273, ekor: null, nilai: 159757000, origins: ["KABUPATEN PULAU MOROTAI", "KOTA BITUNG", "KOTA SORONG", "KOTA ADM. JAKARTA TIMUR", "KOTA MANADO"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Guppy", frekuensi: 6, kg: null, ekor: 751, nilai: 619000, origins: ["KABUPATEN SIDOARJO", "KOTA KEDIRI"], cat: "IKAN_HIAS" },
+            { name: "Patin", frekuensi: 7, kg: 4560, ekor: null, nilai: 225810000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_KONSUMSI" },
+            { name: "Gurame Hias", frekuensi: 2, kg: null, ekor: 100, nilai: 200000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Kepe - kepe", frekuensi: 2, kg: null, ekor: 50, nilai: 500000, origins: ["KABUPATEN KEPULAUAN SELAYAR"], cat: "IKAN_HIAS" },
+            { name: "Ikan Dori", frekuensi: 2, kg: null, ekor: 40, nilai: 400000, origins: ["KABUPATEN KEPULAUAN SELAYAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Badut", frekuensi: 2, kg: null, ekor: 400, nilai: 2000000, origins: ["KABUPATEN KEPULAUAN SELAYAR"], cat: "IKAN_HIAS" },
+            { name: "Betok", frekuensi: 2, kg: null, ekor: 35, nilai: 175000, origins: ["KABUPATEN KEPULAUAN SELAYAR"], cat: "IKAN_HIAS" },
+            { name: "Rajungan", frekuensi: 5, kg: null, ekor: 310, nilai: 19660000, origins: ["KOTA MANADO"], cat: "UDANG_KEPITING" },
+            { name: "Udang Mantis", frekuensi: 6, kg: null, ekor: 517, nilai: 71300000, origins: ["KOTA MANADO"], cat: "UDANG_KEPITING" },
+            { name: "Lobster Pasir", frekuensi: 3, kg: null, ekor: 53, nilai: 8375000, origins: ["KOTA MANADO"], cat: "UDANG_KEPITING" },
+            { name: "Ikan Teri", frekuensi: 14, kg: 8459, ekor: null, nilai: 218495000, origins: ["KOTA MEDAN", "KOTA SORONG", "KOTA BITUNG", "KABUPATEN BEKASI", "KABUPATEN KAIMANA"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kerapu", frekuensi: 9, kg: 2560, ekor: null, nilai: 70450000, origins: ["KABUPATEN PULAU MOROTAI", "KOTA SORONG", "KOTA MAKASSAR", "KABUPATEN LAMONGAN"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kuwe", frekuensi: 19, kg: 309732, ekor: null, nilai: 3166500000, origins: ["KOTA SORONG", "KOTA PASURUAN", "KOTA MAKASSAR", "KABUPATEN SIDOARJO", "KABUPATEN PASURUAN"], cat: "IKAN_KONSUMSI" },
+            { name: "Cumi-Cumi", frekuensi: 8, kg: 1565, ekor: null, nilai: 36950000, origins: ["KOTA SORONG", "KOTA MANADO", "KABUPATEN SIDOARJO"], cat: "IKAN_KONSUMSI" },
+            { name: "Udang Windu", frekuensi: 9, kg: 1024, ekor: null, nilai: 88960000, origins: ["KABUPATEN PANGKAJENE KEPULAUAN", "KOTA SORONG", "KABUPATEN MAROS"], cat: "UDANG_KEPITING" },
+            { name: "Ikan Bawal", frekuensi: 2, kg: 11200, ekor: null, nilai: 300000000, origins: ["KOTA SURABAYA"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Katamba", frekuensi: 2, kg: 2500, ekor: null, nilai: 54000000, origins: ["KOTA SORONG", "KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Cakalang", frekuensi: 4, kg: 321, ekor: null, nilai: 6700072, origins: ["KOTA BITUNG"], cat: "IKAN_KONSUMSI" },
+            { name: "Salmon", frekuensi: 5, kg: 225, ekor: null, nilai: 39375000, origins: ["KOTA ADM. JAKARTA TIMUR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Bandeng", frekuensi: 4, kg: 2520, ekor: null, nilai: 100200000, origins: ["KABUPATEN GORONTALO", "KABUPATEN MINAHASA", "KOTA MANADO", "KOTA BITUNG"], cat: "IKAN_KONSUMSI" },
+            { name: "Lele", frekuensi: 4, kg: null, ekor: 2650, nilai: 17590000, origins: ["KABUPATEN HALMAHERA BARAT", "KABUPATEN SIDOARJO", "KABUPATEN MINAHASA UTARA"], cat: "IKAN_KONSUMSI" },
+            { name: "Induk Lobster Tawar", frekuensi: 1, kg: null, ekor: 20000, nilai: 20000000, origins: ["KABUPATEN MINAHASA"], cat: "BENIH" },
+            { name: "Ikan Lencam", frekuensi: 3, kg: 1360, ekor: null, nilai: 43800200, origins: ["KOTA SORONG", "KABUPATEN LAMONGAN"], cat: "IKAN_KONSUMSI" },
+            { name: "Tepung Cumi", frekuensi: 2, kg: 40, ekor: null, nilai: 2000000, origins: ["KOTA ADM. JAKARTA BARAT"], cat: "OLAHAN_LAIN" },
+            { name: "Ikan Layang", frekuensi: 1, kg: 5, ekor: null, nilai: 120000, origins: ["KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Barakuda", frekuensi: 4, kg: 9748, ekor: null, nilai: 146235000, origins: ["KABUPATEN WAJO", "KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Tongkol", frekuensi: 2, kg: 1900, ekor: null, nilai: 10000000, origins: ["KABUPATEN PULAU MOROTAI"], cat: "IKAN_KONSUMSI" },
+            { name: "Lobster Air Tawar", frekuensi: 7, kg: null, ekor: 2450, nilai: 9000000, origins: ["KOTA TOMOHON", "KOTA MANADO"], cat: "UDANG_KEPITING" },
+            { name: "Mujair", frekuensi: 4, kg: 800, ekor: null, nilai: 36000000, origins: ["KOTA BITUNG"], cat: "IKAN_KONSUMSI" },
+            { name: "Udang Jerbung", frekuensi: 10, kg: 3630, ekor: null, nilai: 280300000, origins: ["KOTA SORONG", "KABUPATEN SIDOARJO"], cat: "UDANG_KEPITING" },
+            { name: "Cairan Tubuh Kepiting Tapal Kuda", frekuensi: 1, kg: 5, ekor: null, nilai: 250000, origins: ["KOTA MANADO"], cat: "OLAHAN_LAIN" },
+            { name: "Gurita", frekuensi: 2, kg: 60, ekor: null, nilai: 3000000, origins: ["KOTA MANADO"], cat: "IKAN_KONSUMSI" },
+            { name: "Benih Nila", frekuensi: 7, kg: null, ekor: 170100, nilai: 20440000, origins: ["KOTA MANADO", "KABUPATEN MINAHASA UTARA", "KABUPATEN BLITAR", "KABUPATEN PASURUAN"], cat: "BENIH" },
+            { name: "Ikan Lemuru", frekuensi: 1, kg: 30, ekor: null, nilai: 1200000, origins: ["KOTA SORONG"], cat: "IKAN_KONSUMSI" },
+            { name: "Olahan Ikan", frekuensi: 5, kg: 15236, ekor: null, nilai: 592102500, origins: ["KABUPATEN BEKASI", "KABUPATEN LAMONGAN", "KABUPATEN SIDOARJO", "KABUPATEN JOMBANG"], cat: "OLAHAN_LAIN" },
+            { name: "Daging Kepiting", frekuensi: 1, kg: 16, ekor: null, nilai: 560000, origins: ["KABUPATEN BEKASI"], cat: "OLAHAN_LAIN" },
+            { name: "Ikan Trakulu", frekuensi: 2, kg: 17493, ekor: null, nilai: 421455000, origins: ["KOTA SORONG", "KABUPATEN MAROS"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kakatua", frekuensi: 4, kg: 8500, ekor: null, nilai: 125000000, origins: ["KOTA MAKASSAR", "KABUPATEN MAROS"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Baronang", frekuensi: 3, kg: 3750, ekor: null, nilai: 57500000, origins: ["KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kaneke", frekuensi: 3, kg: 4750, ekor: null, nilai: 95000000, origins: ["KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Hias Air Tawar", frekuensi: 6, kg: null, ekor: 1470, nilai: 980000, origins: ["KABUPATEN SIDOARJO", "KOTA TANGERANG"], cat: "IKAN_HIAS" },
+            { name: "Pakan Ikan", frekuensi: 3, kg: 23115, ekor: null, nilai: 266130000, origins: ["KABUPATEN SIDOARJO", "KABUPATEN MINAHASA UTARA"], cat: "OLAHAN_LAIN" },
+            { name: "Sepat Mutiara", frekuensi: 1, kg: null, ekor: 100, nilai: 100000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Glassy Tetra", frekuensi: 1, kg: null, ekor: 100, nilai: 25000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Cichlid", frekuensi: 1, kg: null, ekor: 100, nilai: 50000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Ikan Zebra", frekuensi: 1, kg: null, ekor: 250, nilai: 63000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Manfish", frekuensi: 2, kg: null, ekor: 80, nilai: 50000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Benih Bandeng", frekuensi: 1, kg: null, ekor: 100000, nilai: 10500000, origins: ["KABUPATEN BARRU"], cat: "BENIH" },
+            { name: "Ikan Mas", frekuensi: 1, kg: 221, ekor: null, nilai: 6000000, origins: ["KOTA MANADO"], cat: "IKAN_KONSUMSI" },
+            { name: "Olahan Kepiting", frekuensi: 1, kg: 30, ekor: null, nilai: 1050000, origins: ["KABUPATEN BOGOR"], cat: "OLAHAN_LAIN" },
+            { name: "Telur Ikan", frekuensi: 1, kg: 40, ekor: null, nilai: 1400000, origins: ["KABUPATEN BOGOR"], cat: "OLAHAN_LAIN" },
+            { name: "Udang Ebi", frekuensi: 1, kg: 111, ekor: null, nilai: 3885000, origins: ["KABUPATEN BOGOR"], cat: "UDANG_KEPITING" },
+            { name: "Belut", frekuensi: 1, kg: 25, ekor: null, nilai: 875000, origins: ["KABUPATEN BOGOR"], cat: "IKAN_KONSUMSI" },
+            { name: "Benih Ikan Mas", frekuensi: 2, kg: null, ekor: 11500, nilai: 2440000, origins: ["KABUPATEN KEDIRI", "KABUPATEN BLITAR"], cat: "BENIH" },
+            { name: "Kod", frekuensi: 1, kg: 1, ekor: null, nilai: 155000, origins: ["KOTA ADM. JAKARTA BARAT"], cat: "IKAN_KONSUMSI" },
+            { name: "Lobster", frekuensi: 1, kg: null, ekor: 2, nilai: 600000, origins: ["KOTA MANADO"], cat: "UDANG_KEPITING" },
+            { name: "Ikan Sarden", frekuensi: 1, kg: 100, ekor: null, nilai: 1000000, origins: ["KOTA SORONG"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kurisi", frekuensi: 1, kg: 1250, ekor: null, nilai: 25000000, origins: ["KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Ketang - ketang", frekuensi: 1, kg: 250, ekor: null, nilai: 375000, origins: ["KOTA MAKASSAR"], cat: "IKAN_HIAS" },
+            { name: "Ikan Kumpele", frekuensi: 3, kg: 4500, ekor: null, nilai: 64000000, origins: ["KABUPATEN LAMONGAN", "KABUPATEN SIDOARJO"], cat: "IKAN_KONSUMSI" },
+            { name: "Black Ghost", frekuensi: 1, kg: null, ekor: 220, nilai: 110000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Kapiat", frekuensi: 1, kg: 5, ekor: null, nilai: 250000, origins: ["KOTA TANGERANG"], cat: "IKAN_HIAS" },
+            { name: "Red Nose", frekuensi: 1, kg: null, ekor: 100, nilai: 100000, origins: ["KOTA TANGERANG"], cat: "IKAN_HIAS" },
+            { name: "Tiger Fish", frekuensi: 1, kg: null, ekor: 6, nilai: 3000000, origins: ["KOTA TANGERANG"], cat: "IKAN_HIAS" },
+            { name: "Tetra", frekuensi: 1, kg: null, ekor: 100, nilai: 200000, origins: ["KOTA TANGERANG"], cat: "IKAN_HIAS" },
+            { name: "Ikan Kuniran", frekuensi: 1, kg: 1250, ekor: null, nilai: 18750000, origins: ["KOTA MAKASSAR"], cat: "IKAN_KONSUMSI" },
+            { name: "Oscar", frekuensi: 1, kg: null, ekor: 40, nilai: 20000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Discus", frekuensi: 1, kg: null, ekor: 30, nilai: 15000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_HIAS" },
+            { name: "Benih Patin", frekuensi: 1, kg: null, ekor: 1000, nilai: 1000000, origins: ["KABUPATEN KEDIRI"], cat: "BENIH" },
+            { name: "Udang Putih", frekuensi: 2, kg: 560, ekor: null, nilai: 15050000, origins: ["KABUPATEN TELUK BINTUNI"], cat: "UDANG_KEPITING" },
+            { name: "Ikan Tenggiri", frekuensi: 1, kg: 500, ekor: null, nilai: 500000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Kakap", frekuensi: 2, kg: 2500, ekor: null, nilai: 1570000, origins: ["KABUPATEN SIDOARJO"], cat: "IKAN_KONSUMSI" },
+            { name: "Ikan Layur", frekuensi: 2, kg: 5955, ekor: null, nilai: 62000000, origins: ["KOTA MANADO", "KABUPATEN PASURUAN"], cat: "IKAN_KONSUMSI" }
+        ];
+
+        // State Management
+        let filteredDataset = [...rawDataset];
+        let currentPage = 1;
+        const itemsPerPage = 12;
+        let currentSort = { column: 'nilai', dir: 'desc' };
+
+        // Helper: Format Rupiah
+        function formatIDR(value) {
+            if (value === null || value === undefined) return '-';
+            return 'Rp ' + Number(value).toLocaleString('id-ID');
+        }
+
+        // Helper: Format Numbers
+        function formatNum(value) {
+            if (value === null || value === undefined) return '-';
+            return Number(value).toLocaleString('id-ID');
+        }
+
+        // Helper: Get Category Badge Class
+        function getCategoryBadge(cat) {
+            switch(cat) {
+                case 'IKAN_KONSUMSI':
+                    return '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">Ikan Konsumsi</span>';
+                case 'IKAN_HIAS':
+                    return '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">Ikan Hias</span>';
+                case 'UDANG_KEPITING':
+                    return '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Udang & Kepiting</span>';
+                case 'BENIH':
+                    return '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Benih & Induk</span>';
+                default:
+                    return '<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">Olahan/Lainnya</span>';
+            }
+        }
+
+        // Initialize App & KPIs
+        function initApp() {
+            let totalFrek = 0;
+            let totalKg = 0;
+            let totalEkor = 0;
+            let totalNilai = 0;
+            let originSet = new Set();
+
+            rawDataset.forEach(item => {
+                totalFrek += item.frekuensi || 0;
+                totalKg += item.kg || 0;
+                totalEkor += item.ekor || 0;
+                totalNilai += item.nilai || 0;
+                item.origins.forEach(o => originSet.add(o.trim()));
+            });
+
+            document.getElementById('kpi-frekuensi').innerText = formatNum(totalFrek);
+            document.getElementById('kpi-kg').innerText = formatNum(totalKg) + ' kg';
+            document.getElementById('kpi-ekor').innerText = formatNum(totalEkor) + ' ekor';
+            document.getElementById('kpi-nilai').innerText = formatIDR(totalNilai);
+            document.getElementById('kpi-komoditi').innerText = rawDataset.length;
+            document.getElementById('kpi-daerah').innerText = originSet.size;
+
+            renderCharts();
+            renderMatrixTable();
+            filterData();
+            
+            // Initialize Lucide Icons
+            lucide.createIcons();
+        }
+
+        // Render Matrix Cross Tabulation View
+        function renderMatrixTable() {
+            const topOrigins = [
+                "KABUPATEN SIDOARJO",
+                "KOTA MANADO",
+                "KOTA SORONG",
+                "KOTA MAKASSAR",
+                "KOTA BITUNG",
+                "KABUPATEN PASURUAN",
+                "KABUPATEN LAMONGAN",
+                "KOTA TANGERANG"
+            ];
+
+            const topCommodities = [
+                "Ikan Nila",
+                "Udang Vaname",
+                "Ikan Kuwe",
+                "Ikan Tuna",
+                "Ikan Koi",
+                "Ikan Teri",
+                "Udang Jerbung"
+            ];
+
+            const tbody = document.getElementById('matrixTableBody');
+            tbody.innerHTML = '';
+
+            topOrigins.forEach(origin => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
+                let originTd = `<td class="p-3 font-semibold text-slate-800 bg-white sticky left-0 shadow-sm whitespace-nowrap">${origin}</td>`;
+                let cellsHtml = '';
+                let totalOriginFrek = 0;
+
+                topCommodities.forEach(comm => {
+                    const found = rawDataset.find(d => d.name === comm && d.origins.includes(origin));
+                    const frek = found ? found.frekuensi : 0;
+                    totalOriginFrek += frek;
+
+                    let bgClass = "bg-slate-50 text-slate-400";
+                    if (frek > 20) bgClass = "bg-emerald-600 text-white font-bold shadow-sm";
+                    else if (frek > 10) bgClass = "bg-emerald-500 text-white font-semibold";
+                    else if (frek > 4) bgClass = "bg-emerald-200 text-emerald-900 font-medium";
+                    else if (frek > 0) bgClass = "bg-emerald-100 text-emerald-800";
+
+                    cellsHtml += `
+                        <td class="p-2 text-center">
+                            <div class="matrix-cell-active py-1.5 px-2 rounded-lg text-xs ${bgClass}">
+                                ${frek > 0 ? frek : '-'}
+                            </div>
+                        </td>
+                    `;
+                });
+
+                // Calculate all other commodities frek for this origin
+                let otherFrek = 0;
+                rawDataset.forEach(d => {
+                    if (!topCommodities.includes(d.name) && d.origins.includes(origin)) {
+                        otherFrek += d.frekuensi;
+                    }
+                });
+                totalOriginFrek += otherFrek;
+
+                cellsHtml += `
+                    <td class="p-2 text-center">
+                        <div class="py-1.5 px-2 rounded-lg text-xs bg-slate-100 text-slate-600">
+                            ${otherFrek > 0 ? otherFrek : '-'}
+                        </div>
+                    </td>
+                `;
+
+                cellsHtml += `
+                    <td class="p-3 text-center font-bold text-slate-900 bg-slate-50/80">
+                        ${totalOriginFrek}
+                    </td>
+                `;
+
+                tr.innerHTML = originTd + cellsHtml;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter & Search Logic
+        function filterData() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const categoryQuery = document.getElementById('categoryFilter').value;
+
+            filteredDataset = rawDataset.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
+                                     item.origins.some(o => o.toLowerCase().includes(searchQuery));
+                const matchesCategory = categoryQuery === 'ALL' || item.cat === categoryQuery;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Re-apply sort
+            sortTable(currentSort.column, false);
+        }
+
+        // Sort Table Logic
+        function sortTable(column, toggle = true) {
+            if (toggle) {
+                if (currentSort.column === column) {
+                    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = column;
+                    currentSort.dir = 'desc';
+                }
+            }
+
+            filteredDataset.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'name') {
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                } else {
+                    valA = valA || 0;
+                    valB = valB || 0;
+                }
+
+                if (valA < valB) return currentSort.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            currentPage = 1;
+            renderDataTable();
+        }
+
+        // Render Paginated Main Data Table
+        function renderDataTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageItems = filteredDataset.slice(startIdx, endIdx);
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-slate-400">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            Tidak ada data komoditas yang sesuai kriteria.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                pageItems.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-50/80 transition border-b border-slate-100 cursor-pointer";
+                    row.onclick = () => openModal(item);
+
+                    row.innerHTML = `
+                        <td class="py-3.5 px-4 font-medium text-slate-400 text-xs">${startIdx + index + 1}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-semibold text-slate-900">${item.name}</div>
+                            <div class="mt-0.5">${getCategoryBadge(item.cat)}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-semibold text-slate-700">${item.frekuensi}</td>
+                        <td class="py-3.5 px-4 text-right font-medium ${item.kg ? 'text-slate-800' : 'text-slate-300'}">${item.kg ? formatNum(item.kg) : '-'}</td>
+                        <td class="py-3.5 px-4 text-right font-medium ${item.ekor ? 'text-amber-700 font-semibold' : 'text-slate-300'}">${item.ekor ? formatNum(item.ekor) : '-'}</td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-900">${formatIDR(item.nilai)}</td>
+                        <td class="py-3.5 px-4 max-w-xs truncate text-xs text-slate-500" title="${item.origins.join(', ')}">
+                            ${item.origins.slice(0, 2).join(', ')}${item.origins.length > 2 ? ` <span class="text-brand-600 font-medium">+${item.origins.length - 2} lainnya</span>` : ''}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <button onclick="event.stopPropagation(); openModal(${JSON.stringify(item).replace(/"/g, '&quot;')})" 
+                                class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Update Pagination UI
+            const totalPages = Math.ceil(filteredDataset.length / itemsPerPage) || 1;
+            document.getElementById('tableInfo').innerText = `Menampilkan ${filteredDataset.length > 0 ? startIdx + 1 : 0} - ${Math.min(endIdx, filteredDataset.length)} dari ${filteredDataset.length} data`;
+            document.getElementById('pageIndicator').innerText = `Halaman ${currentPage} / ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+            lucide.createIcons();
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderDataTable();
+        }
+
+        // Render Charts using Chart.js
+        let chartTopValInstance = null;
+        let chartCatInstance = null;
+
+        function renderCharts() {
+            // Chart 1: Top 10 Frekuensi
+            const topFreqItems = [...rawDataset]
+                .sort((a, b) => (b.frekuensi || 0) - (a.frekuensi || 0))
+                .slice(0, 10);
+
+            const ctx1 = document.getElementById('chartTopValue').getContext('2d');
+            if (chartTopValInstance) chartTopValInstance.destroy();
+
+            chartTopValInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: topFreqItems.map(i => i.name),
+                    datasets: [{
+                        label: 'Frekuensi Pengiriman (Kali)',
+                        data: topFreqItems.map(i => i.frekuensi),
+                        backgroundColor: '#16a34a',
+                        borderRadius: 8,
+                        hoverBackgroundColor: '#15803d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Frekuensi: ' + context.parsed.y + ' Kali';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' kali';
+                                },
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Categories
+            const catCounts = {
+                'IKAN_KONSUMSI': 0,
+                'IKAN_HIAS': 0,
+                'UDANG_KEPITING': 0,
+                'BENIH': 0,
+                'OLAHAN_LAIN': 0
+            };
+
+            rawDataset.forEach(i => {
+                if (catCounts[i.cat] !== undefined) catCounts[i.cat] += i.frekuensi;
+                else catCounts['OLAHAN_LAIN'] += i.frekuensi;
+            });
+
+            const ctx2 = document.getElementById('chartCategory').getContext('2d');
+            if (chartCatInstance) chartCatInstance.destroy();
+
+            chartCatInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ikan Konsumsi', 'Ikan Hias', 'Udang/Kepiting', 'Benih', 'Olahan/Lain'],
+                    datasets: [{
+                        data: [
+                            catCounts['IKAN_KONSUMSI'],
+                            catCounts['IKAN_HIAS'],
+                            catCounts['UDANG_KEPITING'],
+                            catCounts['BENIH'],
+                            catCounts['OLAHAN_LAIN']
+                        ],
+                        backgroundColor: [
+                            '#2563eb',
+                            '#f59e0b',
+                            '#10b981',
+                            '#a855f7',
+                            '#64748b'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // Modal Logic
+        function openModal(item) {
+            document.getElementById('modalTitle').innerText = item.name;
+            document.getElementById('modalCategory').innerHTML = getCategoryBadge(item.cat);
+            document.getElementById('modalFrek').innerText = item.frekuensi + ' Kali Pengiriman';
+            document.getElementById('modalNilai').innerText = formatIDR(item.nilai);
+            document.getElementById('modalKg').innerText = item.kg ? formatNum(item.kg) + ' KG' : '-';
+            document.getElementById('modalEkor').innerText = item.ekor ? formatNum(item.ekor) + ' Ekor' : '-';
+
+            const originsContainer = document.getElementById('modalOrigins');
+            originsContainer.innerHTML = item.origins.map(o => `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white rounded-lg border border-slate-200 text-slate-700 font-medium text-xs shadow-xs">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                    ${o.trim()}
+                </span>
+            `).join('');
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Export to CSV Function
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Media Pembawa,Frekuensi,Berat (KG),Ekor,Nilai Komoditi (Rp),Daerah Asal\n";
+
+            filteredDataset.forEach(row => {
+                const originsFormatted = `"${row.origins.join(', ')}"`;
+                csvContent += `"${row.name}",${row.frekuensi},${row.kg || ''},${row.ekor || ''},${row.nilai || 0},${originsFormatted}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Laporan_Lalu_Lintas_Media_Pembawa_Sept_2026.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Run Initialization on Load
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+</body>
+</html>
